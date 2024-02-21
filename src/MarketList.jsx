@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 const DATA = [
   { category: 'Fruits', price: '$1', stocked: true, name: 'Apple' },
   { category: 'Fruits', price: '$1', stocked: true, name: 'Dragonfruit' },
@@ -7,7 +9,7 @@ const DATA = [
   { category: 'Vegetables', price: '$1', stocked: true, name: 'Peas' }
 ];
 
-function Product({product}) {
+function Product({ product }) {
   const name = product.stocked ? (
     product.name
   ) : (
@@ -30,17 +32,22 @@ function Category({ category }) {
   );
 }
 
-function Table({marketList}) {
+function Table({ marketList, justInStock, filterText }) {
   const rows = [];
   let lastCategory = null;
   marketList.forEach((product) => {
-    if (product.category !== lastCategory) {
-      rows.push(
-        <Category category={product.category} key={product.category} />
-      );
+    if (justInStock && !product.stocked) {
+      return;
     }
-    rows.push(<Product product={product} key={product.name} />);
-    lastCategory = product.category;
+    if (product.name.toLowerCase().includes(filterText.toLowerCase())) {
+      if (product.category !== lastCategory) {
+        rows.push(
+          <Category category={product.category} key={product.category} />
+        );
+      }
+      rows.push(<Product product={product} key={product.name} />);
+      lastCategory = product.category;
+    }
   });
 
   return (
@@ -58,22 +65,38 @@ function Table({marketList}) {
   );
 }
 
-function SearchBar() {
+function SearchBar({ onCheckChange, onSearchText }) {
   return (
     <form>
-      <input type="text" placeholder="Search..." />
+      <input
+        type="text"
+        placeholder="Search..."
+        onChange={(e) => onSearchText(e.target.value)}
+      />
       <label>
-        <input type="checkbox" /> Only show product in stock
+        <input
+          type="checkbox"
+          onChange={(e) => onCheckChange(e.target.checked)}
+        />{' '}
+        Only show product in stock
       </label>
     </form>
   );
 }
 
-export default function MarketList({data}) {
+export default function MarketList() {
+  const [filterText, setFilterText] = useState('');
+  const [justInStock, setJustInStock] = useState(false);
+
   return (
     <>
-      <SearchBar />
-      <Table marketList={DATA} />
+      <SearchBar onCheckChange={setJustInStock} onSearchText={setFilterText} />
+
+      <Table
+        marketList={DATA}
+        justInStock={justInStock}
+        filterText={filterText}
+      />
     </>
   );
 }
